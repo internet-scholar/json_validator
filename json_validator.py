@@ -6,33 +6,36 @@ from datetime import datetime
 
 def merge_dict_keys(dict1, dict2):
     merged = copy.deepcopy(dict1)
-    if isinstance(dict2, dict):
-        for key, value in dict2.items():
-            if dict1.get(key, None) is None:
-                if isinstance(value, dict):
-                    merged[key] = merge_dict_keys(dict1=dict(), dict2=value)
-                elif isinstance(value, list):
-                    merged[key] = merge_dict_keys(dict1=list(), dict2=value)
+    try:
+        if isinstance(dict2, dict):
+            for key, value in dict2.items():
+                if dict1.get(key, None) is None:
+                    if isinstance(value, dict):
+                        merged[key] = merge_dict_keys(dict1=dict(), dict2=value)
+                    elif isinstance(value, list):
+                        merged[key] = merge_dict_keys(dict1=list(), dict2=value)
+                    else:
+                        merged[key] = value
                 else:
-                    merged[key] = value
-            else:
-                merged[key] = merge_dict_keys(dict1=dict1[key], dict2=value)
-    elif isinstance(dict2, list):
-        for element in dict2:
-            if len(merged) == 0:
-                if isinstance(element, dict):
-                    merged.append(merge_dict_keys(dict1=dict(), dict2=element))
-                elif isinstance(element, list):
-                    merged.append(merge_dict_keys(dict1=list(), dict2=element))
+                    merged[key] = merge_dict_keys(dict1=dict1[key], dict2=value)
+        elif isinstance(dict2, list):
+            for element in dict2:
+                if len(merged) == 0:
+                    if isinstance(element, dict):
+                        merged.append(merge_dict_keys(dict1=dict(), dict2=element))
+                    elif isinstance(element, list):
+                        merged.append(merge_dict_keys(dict1=list(), dict2=element))
+                    else:
+                        merged.append(element)
                 else:
-                    merged.append(element)
-            else:
-                merged[0] = merge_dict_keys(dict1=merged[0], dict2=element)
-    elif dict2 is not None:
-        if dict1 is None:
-            merged = dict2
-        elif dict2 > dict1:
-            merged = dict2
+                    merged[0] = merge_dict_keys(dict1=merged[0], dict2=element)
+        elif dict2 is not None:
+            if dict1 is None:
+                merged = dict2
+            elif dict2 > dict1:
+                merged = dict2
+    except TypeError as e:
+        print(f"Inconsistent types! {type(dict1)} and {type(dict2)}")
     return merged
 
 
@@ -129,11 +132,12 @@ class JSONValidator:
 
 
 def main():
-    json_validator = JSONValidator(url="https://raw.githubusercontent.com/internet-scholar/twitter_stream/master/sample/tweet.json")
-    print(json_validator.athena_schema())
-    #json_validator = JSONValidator()
-    #json_validator.find_standard_in_file('twitter_stream.json')
-    #json_validator.save_standard('new_tweet.json')
+    # json_validator = JSONValidator(url="https://raw.githubusercontent.com/internet-scholar/twitter_stream/master/sample/tweet.json")
+    # print(json_validator.athena_schema())
+    json_validator = JSONValidator()
+    json_validator.find_standard_in_file('ibm.json')
+    with open('athena_ibm.sql', "w") as sql_file:
+        sql_file.write(json_validator.athena_schema())
 
 
 if __name__ == '__main__':
